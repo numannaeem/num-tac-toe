@@ -1,0 +1,23 @@
+{
+  "name": "tictactoe-mulitplayer",
+  "version": "1.0.0",
+  "description": "Online multiplayer tic-tac-toe game using SocketIO",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "client-build": "cd client && npm install && npm run build",
+    "start": "node index",
+    "heroku-postbuild": "npm run client-build",
+    "dev": "concurrently \"cd client && npm start\" \"npx nodemon index\" "
+  },
+  "author": "Numan Naeem",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^6.4.0",
+    "nodemon": "^2.0.15"
+  }
+}

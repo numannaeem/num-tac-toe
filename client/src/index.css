@@ -1,0 +1,71 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+
+.game-board {
+  backdrop-filter: blur(4px);
+  width: fit-content;
+  display: grid;
+  grid-gap: 6px;
+  background-color: white;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 20px;
+  border-radius: 20px;
+}
+
+.inner-box {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  font-weight: 100;
+  border-radius: 10px;
+  width: 100px;
+  height: 100px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 90%;
+  background-color: rgb(228, 228, 228);
+  transition: background-color 150ms;
+}
+
+.bg-green {
+  background-color: rgb(134, 243, 134);
+}
+
+.x {
+  background-image: url('img\\X-dark.png');
+}
+
+.x-active:hover {
+  background-image: url('img\\X-dark.png') !important;
+  background-blend-mode: overlay;
+}
+
+.o {
+  background-image: url('img\\O-dark.png');
+}
+
+.o-active:hover {
+  background-image: url('img\\O-dark.png') !important;
+  background-blend-mode: overlay;
+}
+
+.active {
+  cursor: pointer;
+}
+.active:hover {
+  background-color: rgb(210, 210, 210);
+}
+
+.occupied {
+  pointer-events: none !important;
+}
