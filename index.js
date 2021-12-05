@@ -10,15 +10,11 @@ const cors = require('cors')
 app.use(express.json()) //used to parse json requests
 app.use(cors())
 app.use(express.static(path.resolve(__dirname, './client/build')))
-app.use((req, res, next) => {
-  res.sendFile(path.resolve(__dirname, './client/build', 'index.html'))
-})
-
 
 let roomData = {}
 
 io.on('connection', async socket => {
-  let { roomName, userName } = socket.handshake.query
+  let { roomName } = socket.handshake.query
   let roomSize = io.of('/').adapter.rooms.get(roomName)?.size || 0
   if (roomSize < 2) {
     socket.join(roomName)
@@ -46,47 +42,46 @@ io.on('connection', async socket => {
     socket.disconnect()
   }
 
-  // socket.on('played', async (i) => {
-  // 	const sockets = await io.in(roomName).fetchSockets();
-  // 	const socketIds = sockets.map(s => s.id)
-  // 	currentTurn = currentTurn === 1 ? 0:1
-  // 	console.log('current:' + currentTurn)
-  // 	io.to(socketIds[currentTurn]).emit('yourTurn', i)
-  // })
-
-  socket.on('played', async gameState => {
-    let gameWinner = null
-    let position = []
-    let winningPositions = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6]
-    ]
-    for (let i = 0; i < 8; i++) {
-      position = winningPositions[i]
-      let a = gameState[position[0]]
-      let b = gameState[position[1]]
-      let c = gameState[position[2]]
-      if (a == '' || b == '' || c == '') continue
-      if (a == b && b == c) {
-        gameWinner = roomData[roomName].currentPlayer
-        break
-      }
-    }
-    if (gameWinner === null && !gameState.includes('')) {
-      gameWinner = 'draw'
-    }
-    if (gameWinner) {
+  socket.on('played', async (gameState, result, position) => {
+    if(result) {
       io.in(roomName).emit('game-over', {
-        winner: gameWinner,
+        winner: result === 'd' ? winner : socket.id,
         finalState: gameState,
         winningPosition: position
       })
+      return
+    // let gameWinner = null
+    // let position = []
+    // let winningPositions = [
+    //   [0, 1, 2],
+    //   [3, 4, 5],
+    //   [6, 7, 8],
+    //   [0, 3, 6],
+    //   [1, 4, 7],
+    //   [2, 5, 8],
+    //   [0, 4, 8],
+    //   [2, 4, 6]
+    // ]
+    // for (let i = 0; i < 8; i++) {
+    //   position = winningPositions[i]
+    //   let a = gameState[position[0]]
+    //   let b = gameState[position[1]]
+    //   let c = gameState[position[2]]
+    //   if (a == '' || b == '' || c == '') continue
+    //   if (a == b && b == c) {
+    //     gameWinner = roomData[roomName].currentPlayer
+    //     break
+    //   }
+    // }
+    // if (gameWinner === null && !gameState.includes('')) {
+    //   gameWinner = 'draw'
+    // }
+    // if (gameWinner) {
+    //   io.in(roomName).emit('game-over', {
+    //     winner: gameWinner,
+    //     finalState: gameState,
+    //     winningPosition: position
+    //   })
     } else {
       roomData[roomName].gameState = gameState
       const index = roomData[roomName].players.findIndex(
@@ -127,6 +122,10 @@ app.get('/checkRoom/:roomName', (req, res) => {
   if(roomData[req.params.roomName]?.players.length === 2)
     res.status(404).send('room already taken')
   else res.status(200).send('room available')
+})
+
+app.use((req, res, next) => {
+  res.sendFile(path.resolve(__dirname, './client/build', 'index.html'))
 })
 
 

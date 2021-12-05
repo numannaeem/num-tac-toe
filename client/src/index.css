@@ -40,6 +40,9 @@ body {
 .bg-green {
   background-color: rgb(134, 243, 134);
 }
+.bg-yellow {
+  background-color: rgb(243, 236, 134);
+}
 
 .x {
   background-image: url('img\\X-dark.png');

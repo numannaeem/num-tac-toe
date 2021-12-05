@@ -1,14 +1,31 @@
 import React, { useEffect, useState } from 'react'
-import { CircularProgress, Stack, Typography, Box, Button } from '@mui/material'
+import {
+  CircularProgress,
+  Stack,
+  Typography,
+  Box,
+  Button,
+  ThemeProvider
+} from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 import ReplayIcon from '@mui/icons-material/Replay'
 import { useParams, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import baseUrl from '../baseUrl'
+import { orange } from '@mui/material/colors'
+import { createTheme } from '@mui/material/styles'
 
-function GameComponent ({ userName }) {
+function GameComponent () {
   const params = useParams()
   const navigate = useNavigate()
+
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: orange[600]
+      }
+    }
+  })
 
   const { roomName } = params
   const [gameState, setGameState] = useState(Array(9).fill(''))
@@ -25,8 +42,7 @@ function GameComponent ({ userName }) {
     const newSocket = io(baseUrl, {
       transports: ['websocket', 'polling', 'flashsocket'],
       query: {
-        roomName,
-        userName
+        roomName
       }
     })
     setSocket(newSocket)
@@ -59,30 +75,54 @@ function GameComponent ({ userName }) {
         }
       })
       socket.on('game-over', data => {
-        if (data.winner === 'draw') {
-          setWinnerText('Game draw')
+        if (data.winner === 'd') {
+          setWinnerText('Game draw 😕')
           setGameState(data.finalState)
-        } else {
+        } else if (data.winner !== socket.id) {
           setWinningPos(data.winningPosition)
-          if (data.winner === socket.id) {
-            setWinnerText('You win')
-          } else {
-            setGameState(data.finalState)
-            setWinnerText('Opponent wins')
-          }
+          setGameState(data.finalState)
+          setWinnerText('Opponent wins 😔')
         }
       })
     }
-  }, [socket])
+  }, [socket, yourChar])
 
   const handleClick = i => {
-    if (yourTurn) {
-      let newState = gameState
-      newState[i] = yourChar
-      setYourTurn(false)
-      setGameState(newState)
-      socket.emit('played', newState)
+    if (!yourTurn) return
+    let newState = gameState
+    newState[i] = yourChar
+    setYourTurn(false)
+    setGameState(newState)
+    let gameWinner = null
+    let position = []
+    let winningPositions = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6]
+    ]
+    for (let i = 0; i < 8; i++) {
+      position = winningPositions[i]
+      let a = gameState[position[0]]
+      let b = gameState[position[1]]
+      let c = gameState[position[2]]
+      if (a === '' || b === '' || c === '') continue
+      if (a === b && b === c) {
+        gameWinner = yourChar
+        setWinningPos(position)
+        break
+      }
     }
+    if (gameWinner === null && !gameState.includes('')) {
+      gameWinner = 'd'
+    }    
+    socket.emit('played', newState, gameWinner, position)
+    if (!gameWinner) return
+    setWinnerText(gameWinner === 'd' ? 'Game draw 😕' : 'You win! 🎉')
   }
 
   const restartGame = () => {
@@ -90,66 +130,69 @@ function GameComponent ({ userName }) {
     socket.emit('restart-game')
   }
   return (
-    <Box
-      style={{ backgroundColor: 'rgb(255, 242, 232)' }}
-      minHeight='100vh'
-      minWidth='100vw'
-      alignItems='center'
-      justifyContent='center'
-      display='flex'
-    >
-      {playerLeft ? (
-        <Stack spacing={2} alignItems='center' justifyContent='center'>
-          <Typography variant='h5' textAlign='center'>
-            Oops! Your opponent has left the game :(
-          </Typography>
-          <Button
-            variant='outlined'
-            onClick={() => navigate('/')}
-            color='secondary'
-          >
-            Go back to menu
-          </Button>
-        </Stack>
-      ) : waiting ? (
-        <Stack spacing={2} alignItems='center' justifyContent='center'>
-          <Typography variant='h5' textAlign='center'>
-            Waiting for other player to join
-          </Typography>
-          <CircularProgress color='secondary' />
-        </Stack>
-      ) : (
-        <Stack spacing={3} alignItems='center' justifyContent='center'>
-          <Typography variant='h5'>
-            {winnerText || (yourTurn ? 'Your turn' : "Opponent's turn")}
-          </Typography>
-          <Box sx={{ boxShadow: 10 }} className='game-board'>
-            {gameState.map((a, i) => (
-              <div
-                key={i}
-                onClick={() => handleClick(i)}
-                className={`inner-box ${yourTurn &&
-                  `active ${yourChar}-active`} ${a &&
-                  'occupied'} ${winningPos.includes(i) && 'bg-green'} ${a}`}
-              ></div>
-            ))}
-          </Box>
-          {winnerText ? (
-            <LoadingButton
-              onClick={restartGame}
-              loading={waitingRestart}
-              startIcon={<ReplayIcon />}
-              loadingPosition='start'
-              variant='contained'
+    <ThemeProvider theme={theme}>
+      <Box
+        bgcolor={orange[50]}
+        minHeight='100vh'
+        minWidth='100vw'
+        alignItems='center'
+        justifyContent='center'
+        display='flex'
+      >
+        {playerLeft ? (
+          <Stack spacing={2} alignItems='center' justifyContent='center'>
+            <Typography variant='h5' textAlign='center' color={orange[900]}>
+              Uh-oh! Your opponent has left the game 😐
+            </Typography>
+            <Button
+              variant='outlined'
+              size='large'
+              onClick={() => navigate('/')}
             >
-              {!waitingRestart ? 'Play Again' : 'Waiting for other player'}
-            </LoadingButton>
-          ) : (
-            <div style={{ height: '36.5px' }}></div>
-          )}
-        </Stack>
-      )}
-    </Box>
+              Go back to menu
+            </Button>
+          </Stack>
+        ) : waiting ? (
+          <Stack spacing={2} alignItems='center' justifyContent='center'>
+            <Typography variant='h5' textAlign='center'>
+              Waiting for other player to join
+            </Typography>
+            <CircularProgress color='primary' />
+          </Stack>
+        ) : (
+          <Stack spacing={3} alignItems='center' justifyContent='center'>
+            <Typography color='orangered' variant='h4'>
+              {winnerText || (yourTurn ? 'Your turn' : "Opponent's turn")}
+            </Typography>
+            <Box sx={{ boxShadow: 10 }} className='game-board'>
+              {gameState.map((a, i) => (
+                <div
+                  key={i}
+                  onClick={() => handleClick(i)}
+                  className={`inner-box ${yourTurn &&
+                    `active ${yourChar}-active`} ${a &&
+                    'occupied'} ${winningPos.includes(i) &&
+                    'bg-green'} ${a} ${!gameState.includes('') && 'bg-yellow'}`}
+                ></div>
+              ))}
+            </Box>
+            {winnerText ? (
+              <LoadingButton
+                onClick={restartGame}
+                loading={waitingRestart}
+                startIcon={<ReplayIcon />}
+                loadingPosition='start'
+                variant='contained'
+              >
+                {!waitingRestart ? 'Play Again' : 'Waiting for other player'}
+              </LoadingButton>
+            ) : (
+              <div style={{ height: '36.5px' }}></div>
+            )}
+          </Stack>
+        )}
+      </Box>
+    </ThemeProvider>
   )
 }
 

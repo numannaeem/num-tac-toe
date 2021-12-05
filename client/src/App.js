@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React from 'react'
 import {Routes, Route, BrowserRouter} from 'react-router-dom'
 import GameComponent from './components/GameComponent'
 import HomeComponent from './components/HomeComponent'
 
 function App () {
-  const [userName, setUserName] = useState('')
+  // const [userName, setUserName] = useState('')
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={<HomeComponent setUserName={setUserName} />} />
-        <Route path='/room/:roomName' element={<GameComponent userName={userName} />} />
+        <Route path='/' element={<HomeComponent />} />
+        <Route path='/room/:roomName' element={<GameComponent />} />
       </Routes>
     </BrowserRouter>
   )
