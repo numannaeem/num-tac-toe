@@ -10,9 +10,9 @@ const cors = require('cors')
 app.use(express.json()) //used to parse json requests
 app.use(cors())
 app.use(express.static(path.resolve(__dirname, './client/build')))
-// app.use((req, res, next) => {
-//   res.sendFile(path.resolve(__dirname, './client/build', 'index.html'))
-// })
+app.use((req, res, next) => {
+  res.sendFile(path.resolve(__dirname, './client/build', 'index.html'))
+})
 
 
 let roomData = {}
