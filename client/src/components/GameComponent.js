@@ -76,7 +76,7 @@ function GameComponent () {
       })
       socket.on('game-over', data => {
         if (data.winner === 'd') {
-          setWinnerText('Game draw 😕')
+          setWinnerText("It's a draw 😕")
           setGameState(data.finalState)
         } else if (data.winner !== socket.id) {
           setWinningPos(data.winningPosition)

@@ -45,7 +45,7 @@ io.on('connection', async socket => {
   socket.on('played', async (gameState, result, position) => {
     if(result) {
       io.in(roomName).emit('game-over', {
-        winner: result === 'd' ? winner : socket.id,
+        winner: result === 'd' ? result : socket.id,
         finalState: gameState,
         winningPosition: position
       })
