@@ -12,7 +12,7 @@ import ReplayIcon from '@mui/icons-material/Replay'
 import { useParams, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import baseUrl from '../baseUrl'
-import { orange } from '@mui/material/colors'
+import { orange, grey } from '@mui/material/colors'
 import { createTheme } from '@mui/material/styles'
 
 function GameComponent () {
@@ -55,6 +55,7 @@ function GameComponent () {
       socket.on('init-game', data => {
         setWinningPos([])
         setWaitingRestart(false)
+        setPlayerLeft(false)
         setWinnerText(null)
         setGameState(Array(9).fill(''))
         setWaiting(false)
@@ -62,6 +63,7 @@ function GameComponent () {
           setYourChar('x')
           setYourTurn(true)
         } else {
+          setYourTurn(false)
           setYourChar('o')
         }
       })
@@ -122,7 +124,7 @@ function GameComponent () {
     }    
     socket.emit('played', newState, gameWinner, position)
     if (!gameWinner) return
-    setWinnerText(gameWinner === 'd' ? 'Game draw 😕' : 'You win! 🎉')
+    setWinnerText(gameWinner === 'd' ? "It's a draw 😕" : 'You win! 🎉')
   }
 
   const restartGame = () => {
@@ -142,11 +144,13 @@ function GameComponent () {
         {playerLeft ? (
           <Stack spacing={2} alignItems='center' justifyContent='center'>
             <Typography variant='h5' textAlign='center' color={orange[900]}>
-              Uh-oh! Your opponent has left the game 😐
+              Uh-oh! Opponent has lost connection 😐
             </Typography>
+           <Typography textAlign='center' color={grey[700]} variant="subtitle1">waiting for them to rejoin</Typography>
+            <CircularProgress thickness={2} />
             <Button
               variant='outlined'
-              size='large'
+              size='small'
               onClick={() => navigate('/')}
             >
               Go back to menu
@@ -157,7 +161,7 @@ function GameComponent () {
             <Typography variant='h5' textAlign='center'>
               Waiting for other player to join
             </Typography>
-            <CircularProgress color='primary' />
+            <CircularProgress thickness={2} />
           </Stack>
         ) : (
           <Stack spacing={3} alignItems='center' justifyContent='center'>

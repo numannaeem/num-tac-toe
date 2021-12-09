@@ -37,51 +37,16 @@ io.on('connection', async socket => {
         o: roomData[roomName].players[+!rand]
       })
     }
-  } else {
-    socket.emit('roomFull')
-    socket.disconnect()
   }
 
   socket.on('played', async (gameState, result, position) => {
-    if(result) {
+    if (result) {
       io.in(roomName).emit('game-over', {
         winner: result === 'd' ? result : socket.id,
         finalState: gameState,
         winningPosition: position
       })
       return
-    // let gameWinner = null
-    // let position = []
-    // let winningPositions = [
-    //   [0, 1, 2],
-    //   [3, 4, 5],
-    //   [6, 7, 8],
-    //   [0, 3, 6],
-    //   [1, 4, 7],
-    //   [2, 5, 8],
-    //   [0, 4, 8],
-    //   [2, 4, 6]
-    // ]
-    // for (let i = 0; i < 8; i++) {
-    //   position = winningPositions[i]
-    //   let a = gameState[position[0]]
-    //   let b = gameState[position[1]]
-    //   let c = gameState[position[2]]
-    //   if (a == '' || b == '' || c == '') continue
-    //   if (a == b && b == c) {
-    //     gameWinner = roomData[roomName].currentPlayer
-    //     break
-    //   }
-    // }
-    // if (gameWinner === null && !gameState.includes('')) {
-    //   gameWinner = 'draw'
-    // }
-    // if (gameWinner) {
-    //   io.in(roomName).emit('game-over', {
-    //     winner: gameWinner,
-    //     finalState: gameState,
-    //     winningPosition: position
-    //   })
     } else {
       roomData[roomName].gameState = gameState
       const index = roomData[roomName].players.findIndex(
@@ -113,13 +78,17 @@ io.on('connection', async socket => {
 
   socket.on('disconnect', () => {
     io.in(roomName).emit('player-left')
-    roomData[roomName] = null
+    if (roomData[roomName].players?.length === 2)
+      roomData[roomName].players = roomData[roomName].players.filter(
+        a => a !== socket.id
+      )
+    else roomData[roomName] = null
     console.log(`${socket.id} disconnected`)
   })
 })
 
 app.get('/checkRoom/:roomName', (req, res) => {
-  if(roomData[req.params.roomName]?.players.length === 2)
+  if (roomData[req.params.roomName]?.players.length === 2)
     res.status(404).send('room already taken')
   else res.status(200).send('room available')
 })
@@ -127,7 +96,6 @@ app.get('/checkRoom/:roomName', (req, res) => {
 app.use((req, res, next) => {
   res.sendFile(path.resolve(__dirname, './client/build', 'index.html'))
 })
-
 
 server.listen(process.env.PORT || 5000, err => {
   if (!err) console.log('listening on *:5000')
